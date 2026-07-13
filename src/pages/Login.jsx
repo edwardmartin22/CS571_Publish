@@ -1,10 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { Mail, AlertTriangle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user already acknowledged to avoid showing it on every single reload
+    const hasAcknowledged = sessionStorage.getItem('cs571_acknowledged');
+    if (!hasAcknowledged) {
+      setShowDisclaimer(true);
+    }
+  }, []);
+
+  const handleAcknowledge = () => {
+    sessionStorage.setItem('cs571_acknowledged', 'true');
+    setShowDisclaimer(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -52,6 +66,31 @@ export default function Login() {
           </div>
         </form>
       </div>
+
+      {/* Disclaimer Modal */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mb-6">
+              <AlertTriangle size={32} />
+            </div>
+            <h2 className="text-2xl font-bold font-['Outfit'] text-gray-800 mb-4">
+              Academic Project Notice
+            </h2>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Please acknowledge that this is a fake site created for CS 571. 
+              <strong> No emails will actually be sent, and no real data is collected or stored.</strong> This is purely a static prototype.
+            </p>
+            <button 
+              onClick={handleAcknowledge}
+              className="w-full bg-lm-green text-white font-semibold py-4 rounded-xl hover:bg-lm-dark transition-colors active:scale-95"
+            >
+              I Understand
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -33,6 +33,16 @@ export default function Dashboard() {
     }
   }, [location]);
 
+  // Compute chart data with draft if it exists
+  const draftSaved = sessionStorage.getItem('draft_week_6');
+  let chartData = [...MOCK_HISTORY];
+  const alreadyHasWeek6 = MOCK_HISTORY.find(h => h.round === 6);
+  
+  if (draftSaved && !alreadyHasWeek6) {
+    const avgScore = Math.round(MOCK_HISTORY.reduce((acc, h) => acc + h.score, 0) / MOCK_HISTORY.length) || 80;
+    chartData.push({ round: 6, score: avgScore, isDraft: true });
+  }
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-500">
       
@@ -118,7 +128,7 @@ export default function Dashboard() {
             </div>
             
             <div className="w-full h-full border-b-2 border-l-2 border-gray-400 flex items-end justify-around px-2 pb-0 pt-8 gap-2 relative">
-              {MOCK_HISTORY.map((h, i) => {
+              {chartData.map((h, i) => {
                 const heightPercentage = `${(h.score / 100) * 100}%`;
                 return (
                   <div 
@@ -131,9 +141,11 @@ export default function Dashboard() {
                     onMouseLeave={() => setHoveredData(null)}
                   >
                     <div 
-                      className="w-full bg-lm-green/60 hover:bg-lm-green transition-colors cursor-pointer rounded-t-md"
+                      className={`w-full transition-colors cursor-pointer rounded-t-md ${
+                        h.isDraft ? 'bg-gray-300 hover:bg-gray-400' : 'bg-lm-green/60 hover:bg-lm-green'
+                      }`}
                       style={{ height: heightPercentage }}
-                      onClick={() => navigate('/scorecard/' + h.round)}
+                      onClick={() => h.isDraft ? navigate('/record') : navigate('/scorecard/' + h.round)}
                     >
                     </div>
                   </div>
@@ -142,7 +154,7 @@ export default function Dashboard() {
             </div>
             {/* X-Axis Labels */}
             <div className="w-full flex justify-around px-2 mt-3 gap-2 text-sm font-semibold text-gray-500 ml-[2px]">
-              {MOCK_HISTORY.map((h, i) => (
+              {chartData.map((h, i) => (
                 <div key={i} className="w-full text-center">Wk {h.round}</div>
               ))}
             </div>
@@ -171,11 +183,18 @@ export default function Dashboard() {
             top: mousePos.y + 15 
           }}
         >
-          <div className="font-bold border-b border-gray-600 pb-1 mb-1 text-lm-light truncate">{hoveredData.course}</div>
-          <div className="flex justify-between"><span>Date:</span> <span>{hoveredData.date}</span></div>
-          <div className="flex justify-between"><span>Gross:</span> <span className="font-bold">{hoveredData.score}</span></div>
-          <div className="flex justify-between"><span>Net:</span> <span>{hoveredData.net}</span></div>
-          <div className="flex justify-between"><span>Putts:</span> <span>{hoveredData.putts}</span></div>
+          {hoveredData.isDraft ? (
+            <div className="font-semibold text-center py-2 text-lm-light">
+              You have not submitted this score yet. Click to finish submitting!
+            </div>
+          ) : (
+            <>
+              <div className="font-bold border-b border-gray-600 pb-1 mb-1 text-lm-light truncate">{hoveredData.course}</div>
+              <div className="flex justify-between"><span>Date:</span> <span>{hoveredData.date}</span></div>
+              <div className="flex justify-between"><span>Gross:</span> <span className="font-bold">{hoveredData.score}</span></div>
+              <div className="flex justify-between"><span>Net:</span> <span>{hoveredData.net}</span></div>
+            </>
+          )}
         </div>
       )}
 

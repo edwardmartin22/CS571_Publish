@@ -11,7 +11,22 @@ export default function RecordScore() {
   const [showErrorToast, setShowErrorToast] = useState(false);
   
   // Initialize scores array to match holes length, default empty
-  const [scores, setScores] = useState(Array(18).fill(''));
+  const [scores, setScores] = useState(() => {
+    const saved = sessionStorage.getItem('draft_week_6');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.scores) return parsed.scores;
+    }
+    return Array(18).fill('');
+  });
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('draft_week_6');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.courseId) setSelectedCourseId(parsed.courseId);
+    }
+  }, []);
 
   useEffect(() => {
     if (showSaveToast) {
@@ -197,7 +212,10 @@ export default function RecordScore() {
           </div>
           <div className="flex gap-3">
             <button 
-              onClick={() => setShowSaveToast(true)}
+              onClick={() => {
+                sessionStorage.setItem('draft_week_6', JSON.stringify({ scores, courseId: selectedCourseId }));
+                setShowSaveToast(true);
+              }}
               className="border-2 border-lm-green text-lm-green px-4 py-2 rounded-xl font-semibold hover:bg-lm-light transition-colors flex items-center gap-2"
             >
               <span className="hidden sm:inline">Save</span> Score <Save size={20} />
@@ -225,6 +243,7 @@ export default function RecordScore() {
                   MOCK_HISTORY.push(newEntry);
                 }
                 
+                sessionStorage.removeItem('draft_week_6');
                 navigate('/dashboard', { state: { toastMessage: 'Score successfully submitted for Week 6!', showConfetti: true } });
               }}
               className="bg-lm-green text-white px-4 py-2 rounded-xl font-semibold hover:bg-lm-dark transition-colors flex items-center gap-2"
